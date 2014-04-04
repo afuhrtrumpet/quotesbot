@@ -10,7 +10,9 @@ var helpMessage = "To log a quote, message me "
 	+ "QUOTE replaced with the quote and "
 	+ "AUTHOR replaced with the speaker of "
 	+ "the quote. The /{AUTHOR} portion is "
-	+ "optional.";
+	+ "optional. Message .quotehelp for help "
+	+ "or .quotes to get a full list of quotes "
+	+ "said during this presentation.";
 
 var irc = require("irc");
 
@@ -99,7 +101,8 @@ bot.addListener("pm", function(from, text) {
 	if (presentationActive && from == config.owner && text == ".end") {
 		presentationActive = false;
 		bot.say(config.channels[0], "Presentation " + presentationName
-			+ " is over. Some of the quotes said: " + generateSampleQuotes(3));
+			+ " is over. Some of the quotes said: " + generateSampleQuotes(3)
+			+ ". PM .quotes to get a full list of quotes.");
 	}
 });
 
@@ -114,6 +117,13 @@ bot.addListener("pm", function(from, text) {
 				bot.say(from, "Quote \"" + quote + "\" by " + author + " added.");			
 			}
 		});
+	}
+});
+
+//Sends full list of quotes to sender
+bot.addListener("pm", function(from, text) {
+	if (text == ".quotes") {
+		bot.say(from, generateSampleQuotes(presentationQuotes.length));
 	}
 });
 
