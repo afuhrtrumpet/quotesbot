@@ -5,6 +5,20 @@ var config = {
 	owner: "aftrumpet"
 };
 
+var mongoose = require('mongoose');
+mongoose.connect('mongodb://localhost/test');
+var db = mongoose.connection;
+db.on('error', console.error.bind(console, 'connection error:'));
+db.once('open', function callback() {});
+var Schema = mongoose.Schema;
+
+var presentationSchema = new Schema({
+	name: String,
+    	quotes: [{ quote: String, author: String }]
+});
+
+var Presentation = mongoose.model('Presentation', presentationSchema);
+
 var helpMessage = "To log a quote, message me "
 	+ "in the form {QUOTE}/{AUTHOR}, with "
 	+ "QUOTE replaced with the quote and "
@@ -20,9 +34,10 @@ var bot = new irc.Client(config.server, config.botName, {
 	channels: config.channels
 });
 
+var currentPresentation;
 var presentationActive = false;
-var presentationName = "";
-var presentationQuotes = [];
+//var presentationName = "";
+//var currentPresentation.quotes = [];
 
 var parseMessage = function(message, callback) {
 	if (message.indexOf("{") == -1) {
@@ -62,16 +77,16 @@ var parseQuote = function(quote) {
 
 var generateSampleQuotes = function(maxQuotes) {
 	var sampleQuotes = "";
-	if (presentationQuotes.length == 0) {
+	if (currentPresentation.quotes.length == 0) {
 		return "No quotes sent! Boring presentation?";
-	} else if (presentationQuotes.length < maxQuotes) {
-		for (var i = 0; i < presentationQuotes.length; i++) {
-			sampleQuotes += parseQuote(presentationQuotes[i]) + ", ";
+	} else if (currentPresentation.quotes.length < maxQuotes) {
+		for (var i = 0; i < currentPresentation.quotes.length; i++) {
+			sampleQuotes += parseQuote(currentPresentation.quotes[i]) + ", ";
 		}
 		sampleQuotes = sampleQuotes.substring(0, sampleQuotes.length - 2);
 	} else {
 		for (var i = 0; i < maxQuotes; i++) {
-			sampleQuotes += parseQuote(presentationQuotes[Math.floor(Math.random() * presentationQuotes.length)]) + ", ";
+			sampleQuotes += parseQuote(currentPresentation.quotes[Math.floor(Math.random() * currentPresentation.quotes.length)]) + ", ";
 		}
 		sampleQuotes = sampleQuotes.substring(0, sampleQuotes.length - 2);
 	}
@@ -87,9 +102,10 @@ bot.addListener("pm", function(from, text) {
 bot.addListener("pm", function(from, text) {
 	if (!presentationActive && from == config.owner && text.substring(0, 6) == ".start") {
 		presentationActive = true;
-		presentationName = text.substring(7);
-		presentationQuotes = [];
-		bot.say(config.channels[0], "Presentation " + presentationName
+		//presentationName = text.substring(7);
+		//currentPresentation.quotes = [];
+		currentPresentation = new Presentation( { name: text.substring(7), quotes: [] } );
+		bot.say(config.channels[0], "Presentation " + currentPresentation.name 
 			+ " has been started. Send me memorable quotes in the "
 			+ "format {QUOTE}/{AUTHOR} via PM! Message me .quotehelp"
 			+ " to receive more info.");
@@ -100,9 +116,13 @@ bot.addListener("pm", function(from, text) {
 bot.addListener("pm", function(from, text) {
 	if (presentationActive && from == config.owner && text == ".end") {
 		presentationActive = false;
-		bot.say(config.channels[0], "Presentation " + presentationName
+		bot.say(config.channels[0], "Presentation " + currentPresentation.name
 			+ " is over. Some of the quotes said: " + generateSampleQuotes(3)
 			+ ". PM .quotes to get a full list of quotes.");
+		currentPresentation.save(function (err, currentPresentation) {
+			if (err) return console.error(err);
+			console.log("Presentation " + currentPresentation.name + " saved.");
+		});
 	}
 });
 
@@ -113,7 +133,7 @@ bot.addListener("pm", function(from, text) {
 			if (error) {
 				bot.say(from, "ERROR: " + error);
 			} else {
-				presentationQuotes.push({quote: quote, author: author});
+				currentPresentation.quotes.push({quote: quote, author: author});
 				bot.say(from, "Quote \"" + quote + "\" by " + author + " added.");			
 			}
 		});
@@ -123,7 +143,7 @@ bot.addListener("pm", function(from, text) {
 //Sends full list of quotes to sender
 bot.addListener("pm", function(from, text) {
 	if (text == ".quotes") {
-		bot.say(from, generateSampleQuotes(presentationQuotes.length + 1));
+		bot.say(from, generateSampleQuotes(currentPresentation.quotes.length + 1));
 	}
 });
 
