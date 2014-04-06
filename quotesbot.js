@@ -102,8 +102,6 @@ bot.addListener("pm", function(from, text) {
 bot.addListener("pm", function(from, text) {
 	if (!presentationActive && from == config.owner && text.indexOf(".start") == 0) {
 		presentationActive = true;
-		//presentationName = text.substring(7);
-		//currentPresentation.quotes = [];
 		currentPresentation = new Presentation( { name: text.substring(7), quotes: [] } );
 		bot.say(config.channels[0], "Presentation " + currentPresentation.name 
 			+ " has been started. Send me memorable quotes in the "
@@ -144,12 +142,13 @@ bot.addListener("pm", function(from, text) {
 bot.addListener("pm", function(from, text) {
 	if (text == ".quotes") {
 		if (!presentationActive) {
-			bot.say("No current presentation! Maybe try getting the quotes from a past presentation?");
+			bot.say(from, "No current presentation! Maybe try getting the quotes from a past presentation?");
 		} else {
 			bot.say(from, generateSampleQuotes(currentPresentation, currentPresentation.quotes.length + 1));
 		}
 	} else if (text.indexOf(".quotes") == 0) {
-		var presentationRequested = text.substring(7);
+		var presentationRequested = text.substring(8);
+		console.log("Looking for presentation \"" + presentationRequested + "\"");
 		Presentation.find({ name: presentationRequested }, function(err, items) {
 			if (err) {
 				console.log("DB error@");
