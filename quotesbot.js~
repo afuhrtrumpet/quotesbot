@@ -17,6 +17,8 @@ var presentationSchema = new Schema({
     	quotes: [{ quote: String, author: String }]
 });
 
+presentationSchema.index({name: 1, type: -1});
+
 var Presentation = mongoose.model('Presentation', presentationSchema);
 
 var helpMessage = "To log a quote, message me "
@@ -144,6 +146,29 @@ bot.addListener("pm", function(from, text) {
 bot.addListener("pm", function(from, text) {
 	if (text == ".quotes") {
 		bot.say(from, generateSampleQuotes(currentPresentation.quotes.length + 1));
+	}
+});
+
+//Sends full list of presentations to sender
+bot.addListener("pm", function(from, text) {
+	if (text == ".presentations") {
+		Presentation.find({}, function(err, items) {
+			if (err) {
+				console.log("DB error!");
+				bot.say(from, "Sorry, there was a database error.");
+			} else {
+				var presentationString = "The presentations with quotes recorded are ";
+				items.forEach(function(presentation) {
+					presentationString += presentation.name + ", ";
+				});
+				if (items.length > 0) {
+					presentationString.substring(0, presentationString.length - 2);
+				} else {
+					presentationString += "No presentations recorded! Why not persuade the bot master to start one?";
+				}
+				bot.say(from, presentationString);
+			}
+		});
 	}
 });
 
