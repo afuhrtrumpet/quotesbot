@@ -38,8 +38,6 @@ var bot = new irc.Client(config.server, config.botName, {
 
 var currentPresentation;
 var presentationActive = false;
-//var presentationName = "";
-//var currentPresentation.quotes = [];
 
 var parseMessage = function(message, callback) {
 	if (message.indexOf("{") == -1) {
@@ -77,18 +75,18 @@ var parseQuote = function(quote) {
 	return result;
 }
 
-var generateSampleQuotes = function(maxQuotes) {
+var generateSampleQuotes = function(presentation, maxQuotes) {
 	var sampleQuotes = "";
-	if (currentPresentation.quotes.length == 0) {
+	if (presentation.quotes.length == 0) {
 		return "No quotes sent! Boring presentation?";
-	} else if (currentPresentation.quotes.length < maxQuotes) {
-		for (var i = 0; i < currentPresentation.quotes.length; i++) {
-			sampleQuotes += parseQuote(currentPresentation.quotes[i]) + ", ";
+	} else if (presentation.quotes.length < maxQuotes) {
+		for (var i = 0; i < presentation.quotes.length; i++) {
+			sampleQuotes += parseQuote(presentation.quotes[i]) + ", ";
 		}
 		sampleQuotes = sampleQuotes.substring(0, sampleQuotes.length - 2);
 	} else {
 		for (var i = 0; i < maxQuotes; i++) {
-			sampleQuotes += parseQuote(currentPresentation.quotes[Math.floor(Math.random() * currentPresentation.quotes.length)]) + ", ";
+			sampleQuotes += parseQuote(presentation.quotes[Math.floor(Math.random() * presentation.quotes.length)]) + ", ";
 		}
 		sampleQuotes = sampleQuotes.substring(0, sampleQuotes.length - 2);
 	}
@@ -102,7 +100,7 @@ bot.addListener("pm", function(from, text) {
 
 //Used to start presentation
 bot.addListener("pm", function(from, text) {
-	if (!presentationActive && from == config.owner && text.substring(0, 6) == ".start") {
+	if (!presentationActive && from == config.owner && text.indexOf(".start") == 0) {
 		presentationActive = true;
 		//presentationName = text.substring(7);
 		//currentPresentation.quotes = [];
@@ -119,7 +117,7 @@ bot.addListener("pm", function(from, text) {
 	if (presentationActive && from == config.owner && text == ".end") {
 		presentationActive = false;
 		bot.say(config.channels[0], "Presentation " + currentPresentation.name
-			+ " is over. Some of the quotes said: " + generateSampleQuotes(3)
+			+ " is over. Some of the quotes said: " + generateSampleQuotes(currentPresentation, 3)
 			+ ". PM .quotes to get a full list of quotes.");
 		currentPresentation.save(function (err, currentPresentation) {
 			if (err) return console.error(err);
@@ -145,7 +143,25 @@ bot.addListener("pm", function(from, text) {
 //Sends full list of quotes to sender
 bot.addListener("pm", function(from, text) {
 	if (text == ".quotes") {
-		bot.say(from, generateSampleQuotes(currentPresentation.quotes.length + 1));
+		if (!presentationActive) {
+			bot.say("No current presentation! Maybe try getting the quotes from a past presentation?");
+		} else {
+			bot.say(from, generateSampleQuotes(currentPresentation, currentPresentation.quotes.length + 1));
+		}
+	} else if (text.indexOf(".quotes") == 0) {
+		var presentationRequested = text.substring(7);
+		Presentation.find({ name: presentationRequested }, function(err, items) {
+			if (err) {
+				console.log("DB error@");
+				bot.say(from, "Sorry, there was a database error.");
+			} else {
+				if (items.length == 0) {
+					bot.say(from, "Presentation not found.");
+				} else {
+					bot.say(from, generateSampleQuotes(items[0], items[0].quotes.length + 1));
+				}
+			}
+		});
 	}
 });
 
