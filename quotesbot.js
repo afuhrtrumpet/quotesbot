@@ -176,6 +176,33 @@ bot.addListener("pm", function(from, text) {
 	}
 });
 
+//Displays abbreviated list of quotes in channel
+bot.addListener("message#", function(nick, to, text) {
+	if (text == ".quotes") {
+		if (!presentationActive) {
+			bot.say(to, "No current presentation! Maybe try getting the quotes from a past presentation?");
+		} else {
+			bot.say(to, generateSampleQuotes(currentPresentation, 3));
+		}
+	} else if (text.indexOf(".quotes") == 0) {
+		var presentationRequested = text.substring(8);
+		console.log("Looking for presentation \"" + presentationRequested + "\"");
+		Presentation.find({ name: presentationRequested }, function(err, items) {
+			if (err) {
+				console.log("DB error@");
+				bot.say(to, "Sorry, there was a database error.");
+			} else {
+				if (items.length == 0) {
+					bot.say(to, "Presentation not found.");
+				} else {
+					bot.say(to, generateSampleQuotes(items[0], 3));
+				}
+			}
+		});
+	}
+});
+
+
 //Sends full list of presentations to sender
 bot.addListener("pm", function(from, text) {
 	if (text == ".presentations") {
