@@ -21,14 +21,18 @@ presentationSchema.index({name: 1, type: -1});
 
 var Presentation = mongoose.model('Presentation', presentationSchema);
 
-var helpMessage = "To log a quote, message me "
+var helpMessages = ["To log a quote, message me "
 	+ "in the form {QUOTE}/{AUTHOR}, with "
 	+ "QUOTE replaced with the quote and "
 	+ "AUTHOR replaced with the speaker of "
 	+ "the quote. The /{AUTHOR} portion is "
-	+ "optional. Message .quotehelp for help "
-	+ "or .quotes to get a full list of quotes "
-	+ "said during this presentation.";
+	+ "optional.", " Message .quotehelp for help.",
+	".quotes can be used both in chat and in pm. "
+	+ "In PM it displays all quotes, while in chat "
+	+ "it displays 3 quotes max.", "To find past presentations, "
+	+ "message me .presentations for a full list.",
+	 "You can append the name of a past presentation to .quotes "
+	+ "to get a list of quotes from that presentation."];
 
 var irc = require("irc");
 
@@ -229,7 +233,9 @@ bot.addListener("pm", function(from, text) {
 //Used to send a help message to a user
 bot.addListener("pm", function(from, text) {
 	if (text == ".quotehelp") {
-		bot.say(from, helpMessage);	
+		for (var i = 0; i < helpMessages.length; i++) {
+			bot.say(from, helpMessages[i]);	
+		}
 	}
 });
 
