@@ -85,8 +85,20 @@ var generateSampleQuotes = function(presentation, maxQuotes) {
 		}
 		sampleQuotes = sampleQuotes.substring(0, sampleQuotes.length - 2);
 	} else {
+		var indicesAlreadyUsed = [];
 		for (var i = 0; i < maxQuotes; i++) {
-			sampleQuotes += parseQuote(presentation.quotes[Math.floor(Math.random() * presentation.quotes.length)]) + ", ";
+			var newIndex = false;
+			while (!newIndex) {
+				var index = Math.floor(Math.random() * presentation.quotes.length);
+				console.log("Trying index " + index);
+				if (indicesAlreadyUsed.indexOf(index) == -1) {
+					sampleQuotes += parseQuote(presentation.quotes[index]) + ", ";
+					indicesAlreadyUsed.push(index);
+					newIndex = true;
+				} else {
+					console.log("Index already taken! Drat.");
+				}
+			}
 		}
 		sampleQuotes = sampleQuotes.substring(0, sampleQuotes.length - 2);
 	}
@@ -132,7 +144,7 @@ bot.addListener("pm", function(from, text) {
 				bot.say(from, "ERROR: " + error);
 			} else {
 				currentPresentation.quotes.push({quote: quote, author: author});
-				bot.say(from, "Quote \"" + quote + "\" by " + author + " added.");			
+				bot.say(from, "Quote \"" + quote + "\" by " + author + " added.");
 			}
 		});
 	}
