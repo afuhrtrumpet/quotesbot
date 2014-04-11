@@ -119,8 +119,8 @@ bot.addListener("pm", function(from, text) {
 	if (!presentationActive && from == config.owner && text.indexOf(".start") == 0) {
 		presentationActive = true;
 		currentPresentation = new Presentation( { name: text.substring(7), quotes: [] } );
-		bot.say(config.channels[0], "Presentation " + currentPresentation.name 
-			+ " has been started. Send me memorable quotes in the "
+		bot.say(config.channels[0], "Event \"" + currentPresentation.name 
+			+ "\" has started. Send me memorable quotes in the "
 			+ "format {QUOTE}/{AUTHOR} via PM! Message me .quotehelp"
 			+ " to receive more info.");
 	}
@@ -130,8 +130,8 @@ bot.addListener("pm", function(from, text) {
 bot.addListener("pm", function(from, text) {
 	if (presentationActive && from == config.owner && text == ".end") {
 		presentationActive = false;
-		bot.say(config.channels[0], "Presentation " + currentPresentation.name
-			+ " is over. Some of the quotes said: " + generateSampleQuotes(currentPresentation, 3)
+		bot.say(config.channels[0], "Event \"" + currentPresentation.name
+			+ "\" is over. Some of the quotes said: " + generateSampleQuotes(currentPresentation, 3)
 			+ ". PM .quotes to get a full list of quotes.");
 		currentPresentation.save(function (err, currentPresentation) {
 			if (err) return console.error(err);
