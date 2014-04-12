@@ -1,5 +1,5 @@
 var config = {
-	channels: ["#muhtestchannel"],
+	channels: ["#osuosc"],
 	server: "irc.freenode.net",
 	botName: "QuotesBot",
 	owner: "aftrumpet"
